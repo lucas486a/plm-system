@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="ecr-process" name="ECR Review Process" isExecutable="true">
+        <documentation>Engineering Change Request workflow: DRAFT → SUBMITTED → EVALUATED → APPROVED/REJECTED</documentation>
+
+        <!-- Start Event -->
+        <startEvent id="startEvent" name="Start" flowable:initiator="initiator"/>
+
+        <!-- Service Task: Set status to SUBMITTED -->
+        <serviceTask id="setStatusSubmitted" name="Set Status Submitted"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecrStatus', 'SUBMITTED')}"/>
+
+        <!-- User Task: Evaluate ECR -->
+        <userTask id="evaluateTask" name="Evaluate ECR"
+                  flowable:assignee="${evaluator}"
+                  flowable:formFieldValidation="false">
+            <documentation>Review and evaluate the Engineering Change Request</documentation>
+        </userTask>
+
+        <!-- Service Task: Set status to EVALUATED -->
+        <serviceTask id="setStatusEvaluated" name="Set Status Evaluated"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecrStatus', 'EVALUATED')}"/>
+
+        <!-- User Task: Approve or Reject ECR -->
+        <userTask id="approveRejectTask" name="Approve or Reject ECR"
+                  flowable:assignee="${approver}"
+                  flowable:formFieldValidation="false">
+            <documentation>Make final decision: approve or reject the ECR</documentation>
+        </userTask>
+
+        <!-- Exclusive Gateway: Check approval decision -->
+        <exclusiveGateway id="approvalGateway" name="Approval Decision"/>
+
+        <!-- Service Task: Set status to APPROVED -->
+        <serviceTask id="setStatusApproved" name="Set Status Approved"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecrStatus', 'APPROVED')}"/>
+
+        <!-- Service Task: Set status to REJECTED -->
+        <serviceTask id="setStatusRejected" name="Set Status Rejected"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecrStatus', 'REJECTED')}"/>
+
+        <!-- End Events with execution listeners to sync ECR status -->
+        <endEvent id="endApproved" name="Approved">
+            <extensionElements>
+                <flowable:executionListener delegateExpression="${ecrWorkflowListener}" event="end"/>
+            </extensionElements>
+        </endEvent>
+        <endEvent id="endRejected" name="Rejected">
+            <extensionElements>
+                <flowable:executionListener delegateExpression="${ecrWorkflowListener}" event="end"/>
+            </extensionElements>
+        </endEvent>
+
+        <!-- Sequence Flows -->
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="setStatusSubmitted"/>
+        <sequenceFlow id="flow2" sourceRef="setStatusSubmitted" targetRef="evaluateTask"/>
+        <sequenceFlow id="flow3" sourceRef="evaluateTask" targetRef="setStatusEvaluated"/>
+        <sequenceFlow id="flow4" sourceRef="setStatusEvaluated" targetRef="approveRejectTask"/>
+        <sequenceFlow id="flow5" sourceRef="approveRejectTask" targetRef="approvalGateway"/>
+
+        <!-- Gateway branches -->
+        <sequenceFlow id="flow6" name="Approved" sourceRef="approvalGateway" targetRef="setStatusApproved">
+            <conditionExpression xsi:type="tFormalExpression">${approved == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow7" name="Rejected" sourceRef="approvalGateway" targetRef="setStatusRejected">
+            <conditionExpression xsi:type="tFormalExpression">${approved == false}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow8" sourceRef="setStatusApproved" targetRef="endApproved"/>
+        <sequenceFlow id="flow9" sourceRef="setStatusRejected" targetRef="endRejected"/>
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_ecr-process">
+        <bpmndi:BPMNPlane bpmnElement="ecr-process" id="BPMNPlane_ecr-process">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="30" width="30" x="100" y="163"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusSubmitted" id="BPMNShape_setStatusSubmitted">
+                <omgdc:Bounds height="80" width="100" x="180" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="evaluateTask" id="BPMNShape_evaluateTask">
+                <omgdc:Bounds height="80" width="100" x="330" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusEvaluated" id="BPMNShape_setStatusEvaluated">
+                <omgdc:Bounds height="80" width="100" x="480" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="approveRejectTask" id="BPMNShape_approveRejectTask">
+                <omgdc:Bounds height="80" width="100" x="630" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="approvalGateway" id="BPMNShape_approvalGateway" isMarkerVisible="true">
+                <omgdc:Bounds height="40" width="40" x="780" y="158"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusApproved" id="BPMNShape_setStatusApproved">
+                <omgdc:Bounds height="80" width="100" x="870" y="68"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusRejected" id="BPMNShape_setStatusRejected">
+                <omgdc:Bounds height="80" width="100" x="870" y="228"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endApproved" id="BPMNShape_endApproved">
+                <omgdc:Bounds height="28" width="28" x="1020" y="94"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endRejected" id="BPMNShape_endRejected">
+                <omgdc:Bounds height="28" width="28" x="1020" y="254"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="130" y="178"/>
+                <omgdi:waypoint x="180" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="280" y="178"/>
+                <omgdi:waypoint x="330" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="430" y="178"/>
+                <omgdi:waypoint x="480" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="580" y="178"/>
+                <omgdi:waypoint x="630" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="730" y="178"/>
+                <omgdi:waypoint x="780" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="800" y="158"/>
+                <omgdi:waypoint x="800" y="108"/>
+                <omgdi:waypoint x="870" y="108"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+                <omgdi:waypoint x="800" y="198"/>
+                <omgdi:waypoint x="800" y="268"/>
+                <omgdi:waypoint x="870" y="268"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+                <omgdi:waypoint x="970" y="108"/>
+                <omgdi:waypoint x="1034" y="108"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+                <omgdi:waypoint x="970" y="268"/>
+                <omgdi:waypoint x="1034" y="268"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

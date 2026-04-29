@@ -1,0 +1,101 @@
+# ==================== Java / Maven ====================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ==================== Node.js / Frontend ====================
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# ==================== IDE ====================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+nb-configuration.xml
+
+# ==================== OS ====================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# ==================== Logs ====================
+*.log
+logs/
+backend.log
+backend-error.log
+
+# ==================== Environment ====================
+.env
+.env.local
+.env.*.local
+.application-*.yml
+.application-*.yaml
+application-local.yml
+application-local.yaml
+application-dev.yml
+application-dev.yaml
+
+# ==================== Database ====================
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# ==================== Sisyphus ====================
+.sisyphus/
+
+# ==================== Spring Boot ====================
+spring-shell.log
+
+# ==================== Testing ====================
+test-output/
+frontend/e2e-test-results/
+playwright-report/
+
+# ==================== Build ====================
+build/
+*.build/
+out/

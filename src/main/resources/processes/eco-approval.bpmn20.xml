@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="eco-approval" name="ECO Approval Process" isExecutable="true">
+        <documentation>
+            Engineering Change Order multi-stage approval workflow.
+            Sequential stages: ENGINEERING_REVIEW → MANAGER_APPROVAL.
+            Rejection at any stage returns ECO to DRAFT.
+        </documentation>
+
+        <!-- Start Event -->
+        <startEvent id="startEvent" name="Start" flowable:initiator="initiator"/>
+
+        <!-- User Task: Engineering Review -->
+        <userTask id="engineeringReview" name="Engineering Review"
+                  flowable:assignee="${engineeringReviewer}"
+                  flowable:formFieldValidation="false">
+            <documentation>Engineering review of the ECO. Reviewer approves or rejects.</documentation>
+        </userTask>
+
+        <!-- Gateway after Engineering Review -->
+        <exclusiveGateway id="gatewayAfterEngReview" name="Eng Review Decision"/>
+
+        <!-- User Task: Manager Approval -->
+        <userTask id="managerApproval" name="Manager Approval"
+                  flowable:assignee="${managerApprover}"
+                  flowable:formFieldValidation="false">
+            <documentation>Manager approval of the ECO. Manager approves or rejects.</documentation>
+        </userTask>
+
+        <!-- Gateway after Manager Approval -->
+        <exclusiveGateway id="gatewayAfterManagerApproval" name="Manager Decision"/>
+
+        <!-- End Events -->
+        <endEvent id="endApproved" name="Approved">
+            <extensionElements>
+                <flowable:executionListener
+                        event="end"
+                        delegateExpression="${ecoWorkflowListener}"/>
+            </extensionElements>
+        </endEvent>
+
+        <endEvent id="endRejected" name="Rejected">
+            <extensionElements>
+                <flowable:executionListener
+                        event="end"
+                        delegateExpression="${ecoWorkflowListener}"/>
+            </extensionElements>
+        </endEvent>
+
+        <!-- Sequence Flows -->
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="engineeringReview"/>
+        <sequenceFlow id="flow2" sourceRef="engineeringReview" targetRef="gatewayAfterEngReview"/>
+
+        <!-- Engineering Review gateway branches -->
+        <sequenceFlow id="flow3" name="Approved" sourceRef="gatewayAfterEngReview" targetRef="managerApproval">
+            <conditionExpression xsi:type="tFormalExpression">${approved == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow4" name="Rejected" sourceRef="gatewayAfterEngReview" targetRef="endRejected">
+            <conditionExpression xsi:type="tFormalExpression">${approved == false}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow5" sourceRef="managerApproval" targetRef="gatewayAfterManagerApproval"/>
+
+        <!-- Manager Approval gateway branches -->
+        <sequenceFlow id="flow6" name="Approved" sourceRef="gatewayAfterManagerApproval" targetRef="endApproved">
+            <conditionExpression xsi:type="tFormalExpression">${approved == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flow7" name="Rejected" sourceRef="gatewayAfterManagerApproval" targetRef="endRejected">
+            <conditionExpression xsi:type="tFormalExpression">${approved == false}</conditionExpression>
+        </sequenceFlow>
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_eco-approval">
+        <bpmndi:BPMNPlane bpmnElement="eco-approval" id="BPMNPlane_eco-approval">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="30" width="30" x="100" y="163"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="engineeringReview" id="BPMNShape_engineeringReview">
+                <omgdc:Bounds height="80" width="100" x="200" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="gatewayAfterEngReview" id="BPMNShape_gatewayAfterEngReview" isMarkerVisible="true">
+                <omgdc:Bounds height="40" width="40" x="370" y="158"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="managerApproval" id="BPMNShape_managerApproval">
+                <omgdc:Bounds height="80" width="100" x="480" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="gatewayAfterManagerApproval" id="BPMNShape_gatewayAfterManagerApproval" isMarkerVisible="true">
+                <omgdc:Bounds height="40" width="40" x="650" y="158"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endApproved" id="BPMNShape_endApproved">
+                <omgdc:Bounds height="28" width="28" x="760" y="94"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endRejected" id="BPMNShape_endRejected">
+                <omgdc:Bounds height="28" width="28" x="760" y="234"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="130" y="178"/>
+                <omgdi:waypoint x="200" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="300" y="178"/>
+                <omgdi:waypoint x="370" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="390" y="158"/>
+                <omgdi:waypoint x="390" y="130"/>
+                <omgdi:waypoint x="480" y="130"/>
+                <omgdi:waypoint x="480" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="390" y="198"/>
+                <omgdi:waypoint x="390" y="248"/>
+                <omgdi:waypoint x="774" y="248"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="580" y="178"/>
+                <omgdi:waypoint x="650" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="670" y="158"/>
+                <omgdi:waypoint x="670" y="108"/>
+                <omgdi:waypoint x="760" y="108"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+                <omgdi:waypoint x="670" y="198"/>
+                <omgdi:waypoint x="670" y="248"/>
+                <omgdi:waypoint x="760" y="248"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

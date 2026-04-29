@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="eco-process" name="ECO Implementation Process" isExecutable="true">
+        <documentation>Engineering Change Order workflow: DRAFT → IN_PROGRESS → APPROVED → APPLIED → CLOSED</documentation>
+
+        <!-- Start Event -->
+        <startEvent id="startEvent" name="Start" flowable:initiator="initiator"/>
+
+        <!-- Service Task: Set status to IN_PROGRESS -->
+        <serviceTask id="setStatusInProgress" name="Set Status In Progress"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecoStatus', 'IN_PROGRESS')}"/>
+
+        <!-- User Task: Implement changes -->
+        <userTask id="implementTask" name="Implement Changes"
+                  flowable:assignee="${implementer}"
+                  flowable:formFieldValidation="false">
+            <documentation>Implement the engineering changes defined in the ECO</documentation>
+        </userTask>
+
+        <!-- Service Task: Set status to APPROVED -->
+        <serviceTask id="setStatusApproved" name="Set Status Approved"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecoStatus', 'APPROVED')}"/>
+
+        <!-- User Task: Review implementation -->
+        <userTask id="reviewTask" name="Review Implementation"
+                  flowable:assignee="${reviewer}"
+                  flowable:formFieldValidation="false">
+            <documentation>Review the implemented changes for correctness</documentation>
+        </userTask>
+
+        <!-- Service Task: Set status to APPLIED -->
+        <serviceTask id="setStatusApplied" name="Set Status Applied"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecoStatus', 'APPLIED')}"/>
+
+        <!-- User Task: Apply changes -->
+        <userTask id="applyTask" name="Apply Changes"
+                  flowable:assignee="${applier}"
+                  flowable:formFieldValidation="false">
+            <documentation>Apply the approved changes to production</documentation>
+        </userTask>
+
+        <!-- Service Task: Set status to CLOSED -->
+        <serviceTask id="setStatusClosed" name="Set Status Closed"
+                     flowable:class="org.flowable.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior"
+                     flowable:expression="${execution.setVariable('ecoStatus', 'CLOSED')}"/>
+
+        <!-- End Event -->
+        <endEvent id="endEvent" name="Closed"/>
+
+        <!-- Sequence Flows -->
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="setStatusInProgress"/>
+        <sequenceFlow id="flow2" sourceRef="setStatusInProgress" targetRef="implementTask"/>
+        <sequenceFlow id="flow3" sourceRef="implementTask" targetRef="setStatusApproved"/>
+        <sequenceFlow id="flow4" sourceRef="setStatusApproved" targetRef="reviewTask"/>
+        <sequenceFlow id="flow5" sourceRef="reviewTask" targetRef="setStatusApplied"/>
+        <sequenceFlow id="flow6" sourceRef="setStatusApplied" targetRef="applyTask"/>
+        <sequenceFlow id="flow7" sourceRef="applyTask" targetRef="setStatusClosed"/>
+        <sequenceFlow id="flow8" sourceRef="setStatusClosed" targetRef="endEvent"/>
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_eco-process">
+        <bpmndi:BPMNPlane bpmnElement="eco-process" id="BPMNPlane_eco-process">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="30" width="30" x="100" y="163"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusInProgress" id="BPMNShape_setStatusInProgress">
+                <omgdc:Bounds height="80" width="100" x="180" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="implementTask" id="BPMNShape_implementTask">
+                <omgdc:Bounds height="80" width="100" x="330" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusApproved" id="BPMNShape_setStatusApproved">
+                <omgdc:Bounds height="80" width="100" x="480" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="reviewTask" id="BPMNShape_reviewTask">
+                <omgdc:Bounds height="80" width="100" x="630" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusApplied" id="BPMNShape_setStatusApplied">
+                <omgdc:Bounds height="80" width="100" x="780" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="applyTask" id="BPMNShape_applyTask">
+                <omgdc:Bounds height="80" width="100" x="930" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setStatusClosed" id="BPMNShape_setStatusClosed">
+                <omgdc:Bounds height="80" width="100" x="1080" y="138"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" id="BPMNShape_endEvent">
+                <omgdc:Bounds height="28" width="28" x="1230" y="164"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="130" y="178"/>
+                <omgdi:waypoint x="180" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="280" y="178"/>
+                <omgdi:waypoint x="330" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="430" y="178"/>
+                <omgdi:waypoint x="480" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="580" y="178"/>
+                <omgdi:waypoint x="630" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="730" y="178"/>
+                <omgdi:waypoint x="780" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="880" y="178"/>
+                <omgdi:waypoint x="930" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+                <omgdi:waypoint x="1030" y="178"/>
+                <omgdi:waypoint x="1080" y="178"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+                <omgdi:waypoint x="1180" y="178"/>
+                <omgdi:waypoint x="1230" y="178"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
